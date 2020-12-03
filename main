@@ -93,6 +93,21 @@ void led_flash(){                                           // funcie voor het f
     thread_sleep_for(100);
 }
 
+void led_heardbead(){                                           // funcie voor het flash effect      
+    myled=1.0;
+    myled2=0.25;
+    myled3=0.0;
+    thread_sleep_for(20);
+    myled=1.0;
+    myled2=0.25;
+    myled3=0.0;
+    thread_sleep_for(20);
+    myled = 0.0;
+    myled2 = 0.0;
+    myled3 = 0.0;
+    thread_sleep_for(500);
+}
+
 
 bool knop_open_box      = false;                                                       // een bool voor het open van de box.(wordt true als de knop is ingedrukt en debouce is geweest)
 bool knop_sluit_box     = false;                                                       // een bool voor het sluiten van de box.(wordt true als de knop is ingedrukt en debouce is geweest)
@@ -290,7 +305,7 @@ int main()
                            if (knop_open_box == true){ menu=2;}
                         }
                         if (menu == 1){
-                            led_movement();
+                            led_heardbead();
                             if (knop_sluit_box == true){ menu=menu+1;}
                             if (knop_open_box == true){ menu=menu-1;}
                         }         
