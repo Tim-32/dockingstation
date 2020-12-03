@@ -38,40 +38,51 @@ Timer debounce;                                                                 
 
 void led_start (){                                             //  deze functie regelt het efect van de led bij het opstraten
     
-    myled=0.0;
+    myled=0.0;                                                 // zet alle leds uit
     myled2=0.0;
     myled3=0.0;
 
-   for(double x = 0.0; x <= 1.0; x = x+0.2) {                  // 
+   for(double x = 0.0; x <= 1.0; x = x+0.2) {                  // for loop om groene led langzaam velller te maken
    
         myled2 = x*x;
         thread_sleep_for(200);
     }
         thread_sleep_for(200);
-        myled2= 0.5;
+        myled2= 0.5;                                           // led blijft op 50% branden
 }
 
-void led_movement(){
-    myled = 0.75;
-    myled2 = 0.25;
+void led_movement(){                                           // funcie voor indicatie box gaat bewegen
+    myled = 0.75;                                              // led rood op 75%
+    myled2 = 0.25;                                             // led groen op 25%
+    buzzer = 0.5;                                            
     thread_sleep_for(200);
-    myled = 0.0;
+    myled = 0.0;                                               // alle leds uit
     myled2 = 0.0;
     myled3 = 0.0;
+    buzzer = 0.5;
     thread_sleep_for(200);
 }
 
-void led_rainbow(){
-    for(float i = 0.0; i < 1.0 ; i += 0.001) {
+void leds_off(){
+    myled = 0.0;                                               // alle leds uit
+    myled2 = 0.0;
+    myled3 = 0.0;
+    buzzer = 0.0;
+
+}
+
+float led_rainbow(float i){                                           // funcie voor het regenboog effect
+    
         float p = 3 * i;
         myled = 1.0 - ((p < 1.0) ? 1.0 - p : (p > 2.0) ? p - 2.0 : 0.0);
         myled2 = 1.0 - ((p < 1.0) ? p : (p > 2.0) ? 0.0 : 2.0 - p);
         myled3 = 1.0 - ((p < 1.0) ? 0.0 : (p > 2.0) ? 3.0 - p : p - 1.0); ; 
         thread_sleep_for (10);
-    }
+    
+ return i;
 }
 
-void led_flash(){
+void led_flash(){                                           // funcie voor het flash effect      
     myled=1.0;
     myled2=1.0;
     myled3=1.0;
@@ -83,10 +94,10 @@ void led_flash(){
 }
 
 
-bool knop_open_box      = false;
-bool knop_sluit_box     = false; 
-bool knop_wacht_box     = false;
-bool brug_buzzer_aan    = false;
+bool knop_open_box      = false;                                                       // een bool voor het open van de box.(wordt true als de knop is ingedrukt en debouce is geweest)
+bool knop_sluit_box     = false;                                                       // een bool voor het sluiten van de box.(wordt true als de knop is ingedrukt en debouce is geweest)
+bool knop_wacht_box     = false;                                                       // een bool voor het stopen van de box.(wordt true als de knop is ingedrukt en debouce is geweest)
+
 
 void knop_open(){                                                                     // funtie voor debounce knop open box
     auto ms =timer_read_ms(debounce);                               
@@ -119,72 +130,76 @@ void knop_stop(){                                                               
 
 int main()
 {
-    button_stop.rise( knop_stop);
+    button_stop.rise( knop_stop);                                                  // de interupt funcies
     button_open.rise(knop_open);
     button_close.rise(knop_dicht);
     
 
-    debounce.start();
+    debounce.start();                                                              // start debounce timer
     
     State state = box_opstart;                                                     // state start punt
 
-    bool entry = true;
+    bool entry = true;                                                             // waarden worden geset voor dat de box ingebuikt is
     int counter = 0;
     bool opgestart = false;
 
 
     while (true) {
         switch(state) {
-            case box_opstart:
+            case box_opstart:                                                      // de state die wordt gebruik voor het opstarten van de box
                 if (entry){
-                    led_start();
+                    led_start();                                                   // het opstart effectt
                     entry = false;
                     opgestart = true;
-                }
-                if(opgestart == true){
+                
+                    if(opgestart == true){
                     state = box_wacht;
                     entry = true;
+                    }
                 }
             break;
 
 
 
-            case box_wacht:                           
+            case box_wacht:                                                       //de state voor als de box in stilstand staat.
                 if(entry) {                         
                   
                     motorcontroler_forward=false;
                     motorcontroler_backwards=false;
                     
-                    //light=false;
+                    
                     buzzer=false;
-                    myled2=0.5;
+                    myled2=0.5;                                                 // groene led geeft aan dat de box stilstaat
                     entry = false;
 
-                    if(knop_wacht_box && knop_sluit_box ){
+                    if(knop_wacht_box && knop_sluit_box ){                      //couter om in beurs modes te gaan
                         counter ++;
                     }
 
-                }
-               if(knop_open_box&&!(reed_contact_open)&&(weerstation)&&!(knop_wacht_box)){
-                    state = box_open;                                            // zet state naar box openen om de box te openen
-                    entry = true;
-                    knop_open_box=false;
-                    counter = 0;
-
-               } 
+                
+                 if(knop_open_box&&!(reed_contact_open)&&(weerstation)&&!(knop_wacht_box)){
+                     state = box_open;                                                        // zet state naar box openen om de box te openen
+                     entry = true;
+                     knop_open_box=false;
+                     counter = 0;
+                     leds_off();
+                    } 
                
-               if(knop_sluit_box&&!(reed_contact_dicht)&&!(knop_wacht_box)){
-                    state = box_dicht;                                          // zet state naar box sluiten om de box te sluiten
-                    entry = true;
-                    knop_sluit_box=false;
-                    counter = 0;
-               }
+                 if(knop_sluit_box&&!(reed_contact_dicht)&&!(knop_wacht_box)){
+                     state = box_dicht;                                          // zet state naar box sluiten om de box te sluiten
+                     entry = true;
+                     knop_sluit_box=false;
+                     counter = 0;
+                     leds_off();
+                    }
 
-               if (counter == 5){
-                    state = beurs_mode;                                          // zet state naar box sluiten om de box te sluiten
-                    entry = true;
-                    counter = 0;
-               }
+                 if (counter == 5){
+                     state = beurs_mode;                                          // zet state naar box in beurs mode
+                     entry = true;
+                     counter = 0;
+                     leds_off();
+                    }
+                }    
 
             break;
 
@@ -192,31 +207,38 @@ int main()
 
 
 
-            case box_open:
+            case box_open:                                                    // state om de box te openen
                 if(entry){
-
+                    for (int i = 0;i<3;++i){
+                    
+                    led_movement();                                           // effect voor bewegen box
+                    }                                       
+                    
+                   myled = 0.75;                                              // led rood op 75%
+                   myled2 = 0.25;                                             // led groen op 25%
                    motorcontroler_forward=true;
                    motorcontroler_backwards=false;
                     
-                    //light=true;
-                   buzzer=true;
-                   while(reed_contact_open == false){
-                        led_movement();
-                   }
-                    entry = false;
-                }
+                    
+                   
+                   
+                      
+                   
+                   entry = false;
+                
 
-                if(reed_contact_open) {                                        // box is open
-                    state = box_wacht;
-                    entry = true;
+                 if(reed_contact_open) {                                        // box is open
+                     state = box_wacht;
+                     entry = true;
+                     leds_off();
+                    }
+                 if(knop_wacht_box){
+                     state = box_wacht;                                        // zet state naar box wacht om de box stil te laten staan
+                     entry = true;
+                     knop_wacht_box=false;
+                     leds_off();
+                    } 
                 }
-                if(knop_wacht_box){
-                    state = box_wacht;                                        // zet state naar box wacht om de box stil te laten staan
-                    entry = true;
-                    knop_wacht_box=false;
-
-               } 
-               
                
             break;
 
@@ -224,40 +246,43 @@ int main()
 
 
 
-            case box_dicht:
+            case box_dicht:                                                    // state om de box te openen
                 if(entry){
-
+                 
+                   for (int i = 0;i<3;++i){
+                    
+                        led_movement();                                         // effect voor bewegen box
+                    }                                       
+                    
+                    myled = 0.75;                                              // led rood op 75%
+                    myled2 = 0.25; 
+                 
                     motorcontroler_forward=false;
                     motorcontroler_backwards=true;
                     
-
-                    buzzer=true;
-                    while(reed_contact_dicht == false){
-                        led_movement();
-                    }
-                    entry = false;
-                }
                 
-                if(reed_contact_dicht) {                                    // box is dicht
-                    state = box_wacht;
-                    entry = true;
-                }
+                    if(reed_contact_dicht) {                                    // box is dicht
+                        state = box_wacht;
+                        entry = true;
+                        leds_off();
+                    }
 
 
                
-               if(knop_wacht_box){
-                    state = box_wacht;               // zet state naar box wacht om de box stil te laten staan
-                    entry = true;
-                    knop_wacht_box=false;
-
-               }
+                 if(knop_wacht_box){
+                     state = box_wacht;                                        // zet state naar box wacht om de box stil te laten staan
+                     entry = true;
+                     knop_wacht_box=false;
+                     leds_off();
+                    }   
+                }
             break;
             
 
 
-            case beurs_mode:
+            case beurs_mode:                                                    // state om de box in beurs modes te zetten
                 if(entry){
-                    int menu=0;
+                    int menu=0;                                                 // toggel tussen effecten
                    while (knop_wacht_box==false){
                         if (menu == 0){
                            led_flash();
@@ -269,12 +294,14 @@ int main()
                             if (knop_sluit_box == true){ menu=menu+1;}
                             if (knop_open_box == true){ menu=menu-1;}
                         }         
-                        if (menu == 2){
-                            led_rainbow();
+                        if ((menu == 2)&&!(knop_sluit_box)&&!(knop_open_box)){
+                            for(float i = 0.0; i < 1.0 ; i += 0.001) {
+                            led_rainbow(float i);
                             if (knop_sluit_box == true){ menu=0;}
                             if (knop_open_box == true){ menu=menu-1;}
+                            }
                         } 
-                       
+                      
                    } 
                 
                     entry = false;
@@ -283,13 +310,16 @@ int main()
                     state = box_wacht;               // zet state naar box wacht om de box stil te laten staan
                     entry = true;
                     knop_wacht_box=false;
+                    leds_off();
                }    
             break;
 
 
             default:
             break;
-    }
-}
+        }
+    } 
+    
+
 return 0;
 }
