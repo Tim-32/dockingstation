@@ -311,7 +311,7 @@ int main()
                         }         
                         if ((menu == 2)&&!(knop_sluit_box)&&!(knop_open_box)){
                             for(float i = 0.0; i < 1.0 ; i += 0.001) {
-                            led_rainbow(float i);
+                            led_rainbow(i);
                             if (knop_sluit_box == true){ menu=0;      i = 1;}
                             if (knop_open_box == true) { menu=menu-1; i = 1;}
                             }
